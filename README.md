@@ -19,5 +19,5 @@ Ensure you have **Python 3.9+** installed on your system.
 
 ### 2. Clone the Repository
 ```bash
-git clone [https://github.com/YOUR-USERNAME/FleetApp.git](https://github.com/YOUR-USERNAME/FleetApp.git)
+git clone [https://github.com/BoazOmolo/FleetApp.git]
 cd FleetApp
