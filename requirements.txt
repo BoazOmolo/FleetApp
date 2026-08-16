@@ -1,0 +1,5 @@
+echo streamlit > requirements.txt
+echo pandas >> requirements.txt
+echo requests >> requirements.txt
+echo beautifulsoup4 >> requirements.txt
+echo openpyxl >> requirements.txt
