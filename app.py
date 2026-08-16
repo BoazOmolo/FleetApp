@@ -12,9 +12,9 @@ import requests
 from bs4 import BeautifulSoup
 import streamlit as st
 
-# ==============================================================================
+
 # 1. STREAMLIT CONFIGURATION & SESSION STATE
-# ==============================================================================
+
 st.set_page_config(
     page_title="Boaz Fleet Suite",
     page_icon="🚗",
@@ -24,9 +24,9 @@ st.set_page_config(
 if "http_session" not in st.session_state:
     st.session_state.http_session = requests.Session()
 
-# ==============================================================================
+
 # 2. HELPER FUNCTIONS & PIPELINE ENGINES
-# ==============================================================================
+
 def clean_registration(reg_str):
     """Normalize vehicle registration numbers (e.g., 'KAA 123A' -> 'KAA123A')."""
     if pd.isna(reg_str):
@@ -131,9 +131,8 @@ def evaluate_fleet_compliance(go_trips_df, days_threshold=3):
     return summary
 
 
-# ==============================================================================
 # 3. APPLICATION UI LAYOUT
-# ==============================================================================
+
 st.title("🚗 Boaz Fleet Suite")
 
 # Sidebar
@@ -149,9 +148,9 @@ tab1, tab2, tab3 = st.tabs([
     "🔍 Web Scraper Utility"
 ])
 
-# ------------------------------------------------------------------------------
+
 # TAB 1: FUEL RECONCILIATION
-# ------------------------------------------------------------------------------
+
 with tab1:
     st.header("Fuel Card vs. GO App Reconciliation")
     
@@ -203,9 +202,8 @@ with tab1:
                     mime="text/csv"
                 )
 
-# ------------------------------------------------------------------------------
 # TAB 2: FLEET LOGIN COMPLIANCE
-# ------------------------------------------------------------------------------
+
 with tab2:
     st.header("Fleet Active Log Tracker")
     
@@ -232,9 +230,8 @@ with tab2:
                 st.subheader("Vehicle Compliance Summary")
                 st.dataframe(compliance_df, use_container_width=True)
 
-# ------------------------------------------------------------------------------
 # TAB 3: SCRAPER UTILITY
-# ------------------------------------------------------------------------------
+
 with tab3:
     st.header("GO Portal Raw Data Scraper")
     endpoint = st.selectbox("Select Endpoint:", ["fuel", "trips", "vehicles", "drivers"])
