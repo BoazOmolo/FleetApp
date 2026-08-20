@@ -33,11 +33,11 @@ def inject_custom_styles():
     st.markdown(
         """
         <style>
-            /* Hide only the top-right developer toolbar items */
-            .stAppToolbar {
+            /* Hide top-right action elements (Share, Edit, GitHub, Menu) while preserving header space */
+            [data-testid="stHeaderActionElements"] {
                 display: none !important;
             }
-            [data-testid="stHeaderActionElements"] {
+            .stAppToolbar {
                 display: none !important;
             }
             #MainMenu {
