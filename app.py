@@ -80,7 +80,6 @@ def inject_custom_styles():
 def main():
     st.set_page_config(
         page_title="Davis & Shirtliff - Fuel Reconciliation Engine",
-        page_icon="⛽",
         layout="wide",
         initial_sidebar_state="expanded",
         menu_items={
