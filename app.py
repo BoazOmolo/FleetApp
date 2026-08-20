@@ -17,7 +17,7 @@ GO_FUEL_URL = "https://app.davisandshirtliff.com/GO/fuel?start={start}&end={end}
 
 # Direct online logo asset with local fallback
 DIRECT_LOGO_URL = "https://www.davisandshirtliff.com/images/ds-logo.png"
-LOCAL_LOGO_PATH = Path("assets/dslogo.png")
+LOCAL_LOGO_PATH = Path("assets/ds_logo.png")
 
 def get_logo_source():
     """Return local image path if present, otherwise default to direct URL."""
@@ -29,10 +29,26 @@ def build_go_url(start_date: date, end_date: date) -> str:
     return GO_FUEL_URL.format(start=start_date.strftime("%Y-%m-%d"), end=end_date.strftime("%Y-%m-%d"))
 
 def inject_custom_styles():
-    """Inject Davis & Shirtliff custom brand styling."""
+    """Inject Davis & Shirtliff custom brand styling and hide Streamlit headers."""
     st.markdown(
         """
         <style>
+            /* Hide Streamlit top header bar, toolbar, menu, and footer */
+            header[data-testid="stHeader"] {
+                visibility: hidden;
+                height: 0rem;
+            }
+            .stAppToolbar {
+                display: none !important;
+            }
+            #MainMenu {
+                visibility: hidden;
+            }
+            footer {
+                visibility: hidden;
+            }
+
+            /* Main title styling */
             .main-title {
                 color: #D32F2F;
                 font-weight: 700;
@@ -43,6 +59,7 @@ def inject_custom_styles():
                 font-size: 1.1rem;
                 margin-bottom: 25px;
             }
+            /* Custom card container */
             .ds-card {
                 background-color: #FFFFFF;
                 border-left: 5px solid #D32F2F;
@@ -51,6 +68,7 @@ def inject_custom_styles():
                 box-shadow: 0 1px 3px rgba(0,0,0,0.1);
                 margin-bottom: 20px;
             }
+            /* Button styling */
             .stButton>button {
                 border-radius: 4px;
                 font-weight: 600;
@@ -63,7 +81,14 @@ def inject_custom_styles():
 def main():
     st.set_page_config(
         page_title="Davis & Shirtliff - Fuel Reconciliation Engine",
+        page_icon="⛽",
         layout="wide",
+        initial_sidebar_state="expanded",
+        menu_items={
+            'Get Help': None,
+            'Report a bug': None,
+            'About': None
+        }
     )
     
     inject_custom_styles()
@@ -86,7 +111,6 @@ def main():
         st.sidebar.markdown(f"**GO Fuel Portal:** [Open GO App]({build_go_url(date_range[0], date_range[1])})")
 
     # Main Header Section
-
     st.markdown("<h1 class='main-title'>Davis & Shirtliff</h1>", unsafe_allow_html=True)
     st.markdown("<div class='sub-title'>Fleet Fuel Reconciliation & Compliance Engine</div>", unsafe_allow_html=True)
 
