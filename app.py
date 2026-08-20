@@ -17,7 +17,7 @@ GO_FUEL_URL = "https://app.davisandshirtliff.com/GO/fuel?start={start}&end={end}
 
 # Direct online logo asset with local fallback
 DIRECT_LOGO_URL = "https://www.davisandshirtliff.com/images/dslogo.png"
-LOCAL_LOGO_PATH = Path("assets/ds_logo.png")
+LOCAL_LOGO_PATH = Path("assets/dslogo.png")
 
 def get_logo_source():
     """Return local image path if present, otherwise default to direct URL."""
