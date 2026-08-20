@@ -29,16 +29,15 @@ def build_go_url(start_date: date, end_date: date) -> str:
     return GO_FUEL_URL.format(start=start_date.strftime("%Y-%m-%d"), end=end_date.strftime("%Y-%m-%d"))
 
 def inject_custom_styles():
-    """Inject Davis & Shirtliff custom brand styling and hide Streamlit headers."""
+    """Inject Davis & Shirtliff custom brand styling and hide only developer toolbar items."""
     st.markdown(
         """
         <style>
-            /* Hide Streamlit top header bar, toolbar, menu, and footer */
-            header[data-testid="stHeader"] {
-                visibility: hidden;
-                height: 0rem;
-            }
+            /* Hide only the top-right developer toolbar items */
             .stAppToolbar {
+                display: none !important;
+            }
+            [data-testid="stHeaderActionElements"] {
                 display: none !important;
             }
             #MainMenu {
