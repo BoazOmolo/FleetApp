@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from pathlib import Path
 import pandas as pd
 import streamlit as st
 
@@ -11,9 +12,18 @@ from notifications import (
     send_email,
 )
 
-# Configuration & Assets
+# Configuration & Branding Assets
 GO_FUEL_URL = "https://app.davisandshirtliff.com/GO/fuel?start={start}&end={end}"
-DS_LOGO_URL = "https://www.davisandshirtliff.com/images/ds-logo.png"
+
+# Direct online logo asset with local fallback
+DIRECT_LOGO_URL = "https://www.davisandshirtliff.com/images/ds-logo.png"
+LOCAL_LOGO_PATH = Path("assets/dslogo.png")
+
+def get_logo_source():
+    """Return local image path if present, otherwise default to direct URL."""
+    if LOCAL_LOGO_PATH.exists():
+        return str(LOCAL_LOGO_PATH)
+    return DIRECT_LOGO_URL
 
 def build_go_url(start_date: date, end_date: date) -> str:
     return GO_FUEL_URL.format(start=start_date.strftime("%Y-%m-%d"), end=end_date.strftime("%Y-%m-%d"))
@@ -23,7 +33,6 @@ def inject_custom_styles():
     st.markdown(
         """
         <style>
-            /* Main header styling */
             .main-title {
                 color: #D32F2F;
                 font-weight: 700;
@@ -34,7 +43,6 @@ def inject_custom_styles():
                 font-size: 1.1rem;
                 margin-bottom: 25px;
             }
-            /* Custom card container */
             .ds-card {
                 background-color: #FFFFFF;
                 border-left: 5px solid #D32F2F;
@@ -43,7 +51,6 @@ def inject_custom_styles():
                 box-shadow: 0 1px 3px rgba(0,0,0,0.1);
                 margin-bottom: 20px;
             }
-            /* Primary button hover effects */
             .stButton>button {
                 border-radius: 4px;
                 font-weight: 600;
@@ -61,9 +68,10 @@ def main():
     )
     
     inject_custom_styles()
+    logo_src = get_logo_source()
 
     # Sidebar Header & Branding
-    st.sidebar.image(DS_LOGO_URL, use_container_width=True)
+    st.sidebar.image(logo_src, use_container_width=True)
     st.sidebar.markdown("---")
     st.sidebar.header("Reconciliation Settings")
     
@@ -78,10 +86,10 @@ def main():
     if len(date_range) == 2:
         st.sidebar.markdown(f"**GO Fuel Portal:** [Open GO App]({build_go_url(date_range[0], date_range[1])})")
 
-    # Main Screen Title Section
+    # Main Header Section
     col1, col2 = st.columns([1, 4])
     with col1:
-        st.image(DS_LOGO_URL, width=140)
+        st.image(logo_src, width=140)
     with col2:
         st.markdown("<h1 class='main-title'>Davis & Shirtliff</h1>", unsafe_allow_html=True)
         st.markdown("<div class='sub-title'>Fleet Fuel Reconciliation & Compliance Engine</div>", unsafe_allow_html=True)
