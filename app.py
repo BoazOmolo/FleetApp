@@ -150,10 +150,10 @@ def main():
 
                 exec_body = build_executive_email_body(country, df, datetime.now())
                 send_email(
-                    recipient="fleet.management@davisandshirtliff.com",
+                    recipient="boazomolo14@gmail.com",
                     subject=f"Davis & Shirtliff | Fuel Reconciliation Executive Summary - {COUNTRY_NAMES.get(country)}",
                     body=exec_body,
-                    cc="audit@davisandshirtliff.com"
+                    # cc="audit@davisandshirtliff.com"
                 )
 
                 st.success(f"Reconciliation completed successfully. Dispatched {sent_count} driver compliance emails and delivered the executive report.")
