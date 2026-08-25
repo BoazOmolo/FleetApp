@@ -1,5 +1,6 @@
-echo __pycache__/ > .gitignore
-echo .streamlit/ >> .gitignore
-echo *.csv >> .gitignore
-echo *.xlsx >> .gitignore
-echo .env >> .gitignore
+__pycache__/
+.streamlit/
+*.csv
+*.xlsx
+.env
+app_audit_log.csv

@@ -14,6 +14,7 @@ from notifications import (
     generate_reconciliation_excel,
     send_email,
 )
+from audit_logger import log_audit_event, get_current_user_email, LOG_FILE
 
 # Configuration & Branding Assets
 GO_FUEL_URL = "https://app.davisandshirtliff.com/GO/fuel?start={start}&end={end}"
@@ -84,8 +85,29 @@ def main():
     inject_custom_styles()
     logo_src = get_logo_source()
 
-    # Sidebar Header & Branding
+    # 1. Active User Session Identification
+    if "active_user_email" not in st.session_state:
+        st.session_state["active_user_email"] = ""
+
     st.sidebar.image(logo_src, use_container_width=True)
+    st.sidebar.markdown("---")
+    st.sidebar.header("Operator Authentication")
+
+    current_user = get_current_user_email()
+    if not current_user:
+        user_input = st.sidebar.text_input("Enter your Operator Email to proceed:")
+        if user_input and valid_email(user_input):
+            st.session_state["active_user_email"] = user_input.strip()
+            st.rerun()
+        else:
+            st.warning("Please enter a valid email address to use the portal.")
+            st.stop()
+    else:
+        st.sidebar.success(f"👤 **Logged in as:**\n`{current_user}`")
+        if st.sidebar.button("Switch User"):
+            st.session_state["active_user_email"] = ""
+            st.rerun()
+
     st.sidebar.markdown("---")
     st.sidebar.header("Reconciliation Settings")
 
@@ -176,6 +198,13 @@ def main():
                     attachment_path=str(excel_report_path)
                 )
 
+                # 5. Log the audit activity
+                log_audit_event(
+                    action="EMAIL_DISPATCH",
+                    country=country,
+                    details=f"Dispatched {sent_count} driver email(s) & executive report."
+                )
+
                 st.success(
                     f"Reconciliation completed successfully! Dispatched {sent_count} driver compliance emails "
                     f"and delivered the full Excel audit report to boazomolo14@gmail.com."
@@ -183,6 +212,23 @@ def main():
 
         except Exception as e:
             st.error(f"Error processing upload: {str(e)}")
+
+    # Operational Audit Trail Section
+    st.markdown("---")
+    with st.expander("📋 Operational Audit & User Activity Logs"):
+        if LOG_FILE.exists():
+            log_df = pd.read_csv(LOG_FILE)
+            if not log_df.empty:
+                m1, m2, m3 = st.columns(3)
+                m1.metric("Total System Actions", len(log_df))
+                m2.metric("Active Operators", log_df["user_email"].nunique())
+                m3.metric("Countries Managed", log_df["country"].nunique())
+
+                st.dataframe(log_df.sort_values(by="timestamp", ascending=False), use_container_width=True)
+            else:
+                st.info("No activity logged yet.")
+        else:
+            st.info("No audit log file present.")
 
 
 if __name__ == "__main__":
