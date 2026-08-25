@@ -1,0 +1,19 @@
+{
+  "smtp_server": "smtp.office365.com",
+  "smtp_port": 587,
+  "smtp_user": "notifications@company.com",
+  "smtp_password": "YOUR_SMTP_PASSWORD",
+  "time_tolerance_minutes": 60,
+  "amount_tolerance_pct": 0.02,
+  "volume_tolerance_pct": 0.02,
+  "vehicles_to_remove": ["KAA000A", "UBB999B"],
+  "override_latest_date": {},
+  "country_prefixes": {
+    "K": "Kenya",
+    "U": "Uganda",
+    "T": "Tanzania",
+    "A": "Subcontractor",
+    "B": "Subcontractor",
+    "C": "Subcontractor"
+  }
+}
