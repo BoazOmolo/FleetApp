@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from scraper import parse_html_report
+from scraper import parse_html_report, fetch_go_fuel_html, reconcile_fleet_data
 from notifications import (
     COUNTRY_NAMES,
     COUNTRY_EXEC_CC,
@@ -20,6 +20,7 @@ from audit_logger import log_audit_event, get_current_user_email, LOG_FILE
 GO_FUEL_URL = "https://app.davisandshirtliff.com/GO/fuel?start={start}&end={end}"
 DIRECT_LOGO_URL = "https://www.davisandshirtliff.com/images/dslogo.png"
 LOCAL_LOGO_PATH = Path("assets/dslogo.png")
+DRIVER_MASTER_PATH = Path("C:/Fleet_Automation/Input/Drivers 2026.xlsx")
 
 
 def get_logo_source():
@@ -31,6 +32,26 @@ def get_logo_source():
 
 def build_go_url(start_date: date, end_date: date) -> str:
     return GO_FUEL_URL.format(start=start_date.strftime("%Y-%m-%d"), end=end_date.strftime("%Y-%m-%d"))
+
+
+def enrich_driver_details(df: pd.DataFrame) -> pd.DataFrame:
+    """Merge uploaded Total records with Driver Master Data if driver fields are incomplete."""
+    if DRIVER_MASTER_PATH.exists():
+        try:
+            drivers_df = pd.read_excel(DRIVER_MASTER_PATH)
+            # Standardize lookup column
+            if "Driver_No" in drivers_df.columns:
+                drivers_df.rename(columns={"Driver_No": "driver_no"}, inplace=True)
+            if "Driver_Name" in drivers_df.columns:
+                drivers_df.rename(columns={"Driver_Name": "driver_name"}, inplace=True)
+            if "Email_Address" in drivers_df.columns:
+                drivers_df.rename(columns={"Email_Address": "email"}, inplace=True)
+
+            if "driver_no" in df.columns and "email" not in df.columns:
+                df = df.merge(drivers_df[["driver_no", "driver_name", "email"]], on="driver_no", how="left")
+        except Exception as e:
+            st.sidebar.warning(f"Driver Master auto-enrichment skipped: {str(e)}")
+    return df
 
 
 def inject_custom_styles():
@@ -151,19 +172,36 @@ def main():
             else:
                 df = pd.DataFrame()
 
+            # Enrich driver details from Master File if missing
+            df = enrich_driver_details(df)
+
             st.subheader("Transaction Data Preview")
             st.dataframe(df.head(), use_container_width=True)
 
             if st.button("Run Reconciliation & Send Notifications", type="primary"):
+                # Fetch GO App entries using the selected date range
+                if len(date_range) == 2:
+                    go_url = build_go_url(date_range[0], date_range[1])
+                    go_html = fetch_go_fuel_html(go_url)
+                    df_go = parse_html_report(go_html) if go_html else pd.DataFrame()
+                else:
+                    df_go = pd.DataFrame()
+
+                # Perform fuzzy match reconciliation
+                reconciled_df = reconcile_fleet_data(df, df_go)
+
+                # Filter strictly non-compliant records for dispatching compliance alerts
+                non_compliant_df = reconciled_df[reconciled_df["reconciliation_status"] == "NON_COMPLIANT"].copy()
+
                 # Column validation check
                 required_cols = {"driver_no", "driver_name", "email"}
-                missing_cols = required_cols - set(df.columns)
+                missing_cols = required_cols - set(non_compliant_df.columns)
                 if missing_cols:
-                    st.error(f"Upload error: Missing required column(s): {', '.join(missing_cols)}")
+                    st.error(f"Upload error: Missing required column(s) after processing: {', '.join(missing_cols)}")
                     st.stop()
 
                 # Clean missing fields to preserve group integrity without dropping rows
-                df_clean = df.copy()
+                df_clean = non_compliant_df.copy()
                 df_clean[["driver_no", "driver_name", "email"]] = df_clean[["driver_no", "driver_name", "email"]].fillna("")
 
                 grouped = list(df_clean.groupby(["driver_no", "driver_name", "email"], dropna=False))
@@ -180,16 +218,17 @@ def main():
                             body=body
                         )
                         sent_count += 1
-                    progress_bar.progress((idx + 1) / len(grouped))
+                    if len(grouped) > 0:
+                        progress_bar.progress((idx + 1) / len(grouped))
 
                 # 2. Generate detailed Excel audit sheet
-                excel_report_path = generate_reconciliation_excel(df, country)
+                excel_report_path = generate_reconciliation_excel(non_compliant_df, country)
 
                 # 3. Dynamic CC list mapping from selected country
                 exec_cc_recipients = COUNTRY_EXEC_CC.get(country, [])
 
                 # 4. Deliver Executive Summary with Excel Attachment & Dynamic CCs
-                exec_body = build_executive_email_body(country, df, datetime.now())
+                exec_body = build_executive_email_body(country, non_compliant_df, datetime.now())
                 send_email(
                     recipient="boazomolo14@gmail.com",
                     subject=f"Davis & Shirtliff | Daily Fuel Reconciliation Audit Report - {COUNTRY_NAMES.get(country, country)}",
@@ -202,12 +241,12 @@ def main():
                 log_audit_event(
                     action="EMAIL_DISPATCH",
                     country=country,
-                    details=f"Dispatched {sent_count} driver email(s) & executive report."
+                    details=f"Dispatched {sent_count} driver email(s) & executive report for {len(non_compliant_df)} non-compliant records."
                 )
 
                 st.success(
-                    f"Reconciliation completed successfully! Dispatched {sent_count} driver compliance emails "
-                    f"and delivered the full Excel audit report to boazomolo14@gmail.com."
+                    f"Reconciliation completed successfully! Identified {len(non_compliant_df)} non-compliant transaction(s), "
+                    f"dispatched {sent_count} driver compliance emails, and delivered the full Excel audit report to boazomolo14@gmail.com."
                 )
 
         except Exception as e:
