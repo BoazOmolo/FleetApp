@@ -145,9 +145,9 @@ def main():
 
     # Mode Status Indicator
     if TEST_MODE:
-        st.sidebar.warning("⚠️ **TEST MODE ENABLED**\nEmails will be logged to console instead of live dispatch.")
+        st.sidebar.warning("**TEST MODE ENABLED**\nEmails will be logged to console instead of live dispatch.")
     else:
-        st.sidebar.success("🚀 **LIVE MODE ENABLED**\nEmails will be dispatched to drivers.")
+        st.sidebar.success("**LIVE MODE ENABLED**\nEmails will be dispatched to drivers.")
 
     # Main Header Section
     st.markdown("<h1 class='main-title'>Davis & Shirtliff</h1>", unsafe_allow_html=True)
